@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ustoz.uz — Личный кабинет</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand-student: #0ea5e9;
+      --brand-teacher: #6366f1;
+      --sidebar-w: 260px;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Manrope', sans-serif; background: #f1f5f9; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      display: flex; flex-direction: column;
+      transition: transform .3s ease;
+      z-index: 40;
+    }
+    .sidebar-student { background: linear-gradient(180deg, #0c1445 0%, #0f2167 100%); }
+    .sidebar-teacher { background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%); }
+
+    .sidebar-logo { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 1.4rem; }
+    .sidebar-logo span { color: #38bdf8; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 20px; border-radius: 10px;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.88rem; font-weight: 500;
+      cursor: pointer; transition: all .2s;
+      text-decoration: none;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .nav-item.active { background: rgba(255,255,255,0.15); }
+    .nav-icon { width: 18px; text-align: center; opacity: .8; }
+
+    /* ── Main layout ── */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── Header ── */
+    .top-header {
+      position: sticky; top: 0; z-index: 30;
+      backdrop-filter: blur(12px);
+      background: rgba(241,245,249,0.9);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      transition: box-shadow .2s;
+    }
+    .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+
+    /* ── Stat chips ── */
+    .stat-chip {
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+
+    /* ── Lesson timer ── */
+    .timer-digit {
+      font-family: 'Sora', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    /* ── Avatar ── */
+    .avatar {
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, #6366f1, #0ea5e9);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── Status badge ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-red   { background: #fee2e2; color: #b91c1c; }
+    .badge-blue  { background: #dbeafe; color: #1d4ed8; }
+    .badge-amber { background: #fef9c3; color: #a16207; }
+
+    /* ── Role toggle (demo) ── */
+    .role-toggle {
+      position: fixed; bottom: 28px; right: 28px; z-index: 100;
+      background: linear-gradient(135deg, #6366f1, #0ea5e9);
+      border-radius: 50px;
+      padding: 10px 22px;
+      color: #fff; font-weight: 700; font-size: 0.85rem;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(99,102,241,0.45);
+      transition: transform .2s, box-shadow .2s;
+      display: flex; align-items: center; gap: 8px;
+      border: none;
+    }
+    .role-toggle:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(99,102,241,0.55); }
+
+    /* ── Progress bar ── */
+    .progress-track { height: 6px; border-radius: 99px; background: #e2e8f0; }
+    .progress-fill  { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+    /* ── Calendar mini ── */
+    .cal-day {
+      width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      transition: all .15s;
+    }
+    .cal-day:hover { background: #e0e7ff; color: #4338ca; }
+    .cal-day.today { background: #6366f1; color: #fff; }
+    .cal-day.has-lesson { position: relative; }
+    .cal-day.has-lesson::after {
+      content: ''; width: 4px; height: 4px; border-radius: 50%;
+      background: #10b981; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+    }
+
+    /* Animations */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp .4s ease forwards; opacity: 0; }
+    .delay-1 { animation-delay: .08s; }
+    .delay-2 { animation-delay: .16s; }
+    .delay-3 { animation-delay: .24s; }
+    .delay-4 { animation-delay: .32s; }
+
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
+      70%  { box-shadow: 0 0 0 12px rgba(14,165,233,0); }
+      100% { box-shadow: 0 0 0 0 rgba(14,165,233,0); }
+    }
+    .pulse-ring { animation: pulse-ring 2s infinite; }
+
+    @keyframes countUp { from { opacity:0; transform: scale(.6); } to { opacity:1; transform: scale(1); } }
+    .count-up { animation: countUp .5s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ STUDENT DASHBOARD ═══════════════════════════ -->
+<div id="student-view">
+
+  <!-- Sidebar -->
+  <aside class="sidebar sidebar-student">
+    <div class="p-5 pb-3">
+      <div class="sidebar-logo mb-8">ustoz<span>.</span>uz</div>
+
+      <div class="flex items-center gap-3 mb-6 px-1">
+        <div class="avatar w-10 h-10 text-sm">АБ</div>
+        <div>
+          <div class="text-white text-sm font-semibold">Алибек Б.</div>
+          <div class="text-xs" style="color:rgba(255,255,255,0.45)">Ученик</div>
+        </div>
+      </div>
+
+      <div class="text-xs font-semibold uppercase tracking-widest mb-3 px-2" style="color:rgba(255,255,255,0.3)">Меню</div>
+      <nav class="flex flex-col gap-1">
+        <a class="nav-item active" onclick="showSection('s-home', this)">
+          <span class="nav-icon">🏠</span> Главная
+        </a>
+        <a class="nav-item" onclick="showSection('s-schedule', this)">
+          <span class="nav-icon">📅</span> Расписание
+        </a>
+        <a class="nav-item" onclick="showSection('s-history', this)">
+          <span class="nav-icon">📖</span> История уроков
+        </a>
+        <a class="nav-item" onclick="showSection('s-teachers', this)">
+          <span class="nav-icon">👩‍🏫</span> Мои учителя
+        </a>
+        <a class="nav-item" onclick="showSection('s-support', this)">
+          <span class="nav-icon">💬</span> Поддержка
+        </a>
+      </nav>
+    </div>
+
+    <div class="mt-auto p-5">
+      <!-- Balance card -->
+      <div class="rounded-xl p-4 mb-4" style="background:rgba(255,255,255,0.08)">
+        <div class="text-xs font-medium mb-1" style="color:rgba(255,255,255,0.5)">Баланс уроков</div>
+        <div class="text-white text-2xl font-bold font-sora">8</div>
+        <div class="text-xs mt-1" style="color:rgba(255,255,255,0.4)">из 10 куплено</div>
+        <div class="progress-track mt-2">
+          <div class="progress-fill" style="width:80%; background: linear-gradient(90deg, #38bdf8, #818cf8);"></div>
+        </div>
+      </div>
+
+      <button onclick="logout()" class="nav-item w-full justify-start" style="color:rgba(255,100,100,0.7)">
+        <span class="nav-icon">🚪</span> Выйти
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+
+    <!-- Top Header -->
+    <header class="top-header px-8 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-slate-800">Привет, Алибек! 👋</h1>
+        <p class="text-sm text-slate-500">Пятница, 23 мая 2026</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="relative p-2 rounded-xl hover:bg-slate-100 transition">
+          <span class="text-xl">🔔</span>
+          <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
+        </button>
+        <button onclick="openQuiz()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold transition"
+          style="background: linear-gradient(135deg, #0ea5e9, #6366f1);">
+          ✨ Найти учителя
+        </button>
+      </div>
+    </header>
+
+    <!-- Page sections -->
+    <main class="p-8">
+
+      <!-- HOME SECTION -->
+      <div id="s-home">
+
+        <!-- Next lesson + Find teacher -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+          <!-- Next lesson -->
+          <div class="lg:col-span-2 card p-6 fade-up">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="badge badge-green mb-2">🟢 Скоро начнётся</div>
+                <h2 class="text-lg font-bold text-slate-800">Ближайший урок</h2>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-slate-400">Осталось</div>
+                <div id="countdown" class="timer-digit text-indigo-600">01:45</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 rounded-xl" style="background:#f8faff">
+              <div class="avatar w-14 h-14 text-lg" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">МА</div>
+              <div class="flex-1">
+                <div class="font-semibold text-slate-800">Малика Азимова</div>
+                <div class="text-sm text-slate-500 mt-0.5">📚 Английский язык — IELTS подготовка</div>
+                <div class="text-xs text-slate-400 mt-1">⏰ Сегодня, 15:00–16:00 · Zoom</div>
+              </div>
+              <button onclick="joinClass()" class="pulse-ring px-5 py-2.5 rounded-xl text-white font-semibold text-sm transition hover:opacity-90"
+                style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                Войти →
+              </button>
+            </div>
+
+            <div class="flex gap-4 mt-4 pt-4 border-t border-slate-100">
+              <div class="text-center">
+                <div class="text-sm font-bold text-slate-800">24</div>
+                <div class="text-xs text-slate-400">Уроков</div>
+              </div>
+              <div class="w-px bg-slate-100"></div>
+              <div class="text-center">
+                <div class="text-sm font-bold text-slate-800">4.9 ⭐</div>
+                <div class="text-xs text-slate-400">Рейтинг</div>
+              </div>
+              <div class="w-px bg-slate-100"></div>
+              <div class="text-center">
+                <div class="text-sm font-bold text-slate-800">$12/ч</div>
+                <div class="text-xs text-slate-400">Стоимость</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CTA Find teacher -->
+          <div class="card p-6 flex flex-col justify-between fade-up delay-1"
+            style="background: linear-gradient(145deg, #0c1445, #1e40af);">
+            <div>
+              <div class="text-3xl mb-3">🎯</div>
+              <h3 class="text-white font-bold text-lg mb-2">Найти нового учителя</h3>
+              <p class="text-blue-200 text-sm leading-relaxed">Пройди тест по интересам — подберём лучшего репетитора за 2 минуты</p>
+            </div>
+            <button onclick="openQuiz()"
+              class="mt-5 w-full py-3 rounded-xl font-bold text-sm transition hover:opacity-90"
+              style="background: linear-gradient(135deg, #38bdf8, #6366f1); color:#fff;">
+              🚀 Пройти тест
+            </button>
+          </div>
+        </div>
+
+        <!-- My teachers -->
+        <div class="fade-up delay-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-slate-800">Мои учителя</h2>
+            <a href="#" class="text-sm text-indigo-600 font-medium hover:underline">Все →</a>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="my-teachers-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Upcoming lessons mini -->
+        <div class="mt-6 fade-up delay-3">
+          <h2 class="text-lg font-bold text-slate-800 mb-4">Расписание на неделю</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="s-upcoming-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+      </div><!-- /s-home -->
+
+      <!-- SCHEDULE SECTION -->
+      <div id="s-schedule" class="hidden">
+        <h2 class="text-xl font-bold text-slate-800 mb-6">Моё расписание</h2>
+        <div class="card p-6">
+          <div id="mini-calendar"></div>
+        </div>
+      </div>
+
+      <!-- HISTORY SECTION -->
+      <div id="s-history" class="hidden">
+        <h2 class="text-xl font-bold text-slate-800 mb-6">История уроков</h2>
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-100 bg-slate-50">
+                <th class="text-left px-6 py-3 text-slate-500 font-semibold">Учитель</th>
+                <th class="text-left px-6 py-3 text-slate-500 font-semibold">Предмет</th>
+                <th class="text-left px-6 py-3 text-slate-500 font-semibold">Дата</th>
+                <th class="text-left px-6 py-3 text-slate-500 font-semibold">Длит.</th>
+                <th class="text-left px-6 py-3 text-slate-500 font-semibold">Статус</th>
+              </tr>
+            </thead>
+            <tbody id="history-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUPPORT SECTION -->
+      <div id="s-support" class="hidden">
+        <h2 class="text-xl font-bold text-slate-800 mb-6">Поддержка</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="card p-6 text-center cursor-pointer hover:border hover:border-indigo-300 transition">
+            <div class="text-3xl mb-3">💬</div>
+            <div class="font-semibold text-slate-700">Live-чат</div>
+            <div class="text-sm text-slate-400 mt-1">Ответ за 5 минут</div>
+          </div>
+          <div class="card p-6 text-center cursor-pointer hover:border hover:border-indigo-300 transition">
+            <div class="text-3xl mb-3">📧</div>
+            <div class="font-semibold text-slate-700">Email</div>
+            <div class="text-sm text-slate-400 mt-1">support@ustoz.uz</div>
+          </div>
+          <div class="card p-6 text-center cursor-pointer hover:border hover:border-indigo-300 transition">
+            <div class="text-3xl mb-3">📱</div>
+            <div class="font-semibold text-slate-700">Telegram</div>
+            <div class="text-sm text-slate-400 mt-1">@ustoz_support</div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <h3 class="font-bold text-slate-700 mb-4">Отправить сообщение</h3>
+          <textarea class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-indigo-400" rows="4" placeholder="Опишите вашу проблему..."></textarea>
+          <button class="mt-3 px-6 py-2.5 rounded-xl text-white text-sm font-semibold" style="background:#6366f1">Отправить</button>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /main-content student -->
+</div><!-- /student-view -->
+
+
+<!-- ═══════════════════════════ TEACHER DASHBOARD ═══════════════════════════ -->
+<div id="teacher-view" class="hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar sidebar-teacher">
+    <div class="p-5 pb-3">
+      <div class="sidebar-logo mb-8">ustoz<span>.</span>uz</div>
+
+      <div class="flex items-center gap-3 mb-6 px-1">
+        <div class="avatar w-10 h-10 text-sm" style="background:linear-gradient(135deg,#a78bfa,#6366f1)">МА</div>
+        <div>
+          <div class="text-white text-sm font-semibold">Малика Азимова</div>
+          <div class="flex items-center gap-1 mt-0.5">
+            <span class="badge badge-green" style="font-size:0.65rem; padding:2px 7px;">✓ Активна</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-xs font-semibold uppercase tracking-widest mb-3 px-2" style="color:rgba(255,255,255,0.3)">Меню</div>
+      <nav class="flex flex-col gap-1">
+        <a class="nav-item active" onclick="showTeacherSection('t-home', this)">
+          <span class="nav-icon">🏠</span> Главная
+        </a>
+        <a class="nav-item" onclick="showTeacherSection('t-schedule', this)">
+          <span class="nav-icon">📅</span> Моё расписание
+        </a>
+        <a class="nav-item" onclick="showTeacherSection('t-materials', this)">
+          <span class="nav-icon">📂</span> Мои материалы
+        </a>
+        <a class="nav-item" onclick="showTeacherSection('t-students', this)">
+          <span class="nav-icon">👨‍🎓</span> Ученики
+        </a>
+        <a class="nav-item" onclick="showTeacherSection('t-subscription', this)">
+          <span class="nav-icon">💳</span> Подписка
+        </a>
+      </nav>
+    </div>
+
+    <div class="mt-auto p-5">
+      <div class="rounded-xl p-4 mb-4" style="background:rgba(255,255,255,0.08)">
+        <div class="text-xs font-medium mb-1" style="color:rgba(255,255,255,0.5)">Заработок (май)</div>
+        <div class="text-white text-2xl font-bold">$348</div>
+        <div class="flex items-center gap-1 mt-1">
+          <span class="text-green-400 text-xs font-semibold">↑ +18%</span>
+          <span class="text-xs" style="color:rgba(255,255,255,0.4)">vs апрель</span>
+        </div>
+      </div>
+      <button onclick="logout()" class="nav-item w-full justify-start" style="color:rgba(255,100,100,0.7)">
+        <span class="nav-icon">🚪</span> Выйти
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+
+    <!-- Header -->
+    <header class="top-header px-8 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-slate-800">Добро пожаловать, Малика! 🎓</h1>
+        <p class="text-sm text-slate-500">Пятница, 23 мая 2026</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm" style="background:#f0fdf4">
+          <span class="w-2 h-2 rounded-full bg-green-500"></span>
+          <span class="text-green-700 font-semibold">Подписка активна</span>
+        </div>
+        <button class="relative p-2 rounded-xl hover:bg-slate-100 transition">
+          <span class="text-xl">🔔</span>
+          <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="p-8">
+
+      <!-- HOME -->
+      <div id="t-home">
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="stat-chip card fade-up" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+            <div class="text-indigo-200 text-xs font-semibold">Учеников</div>
+            <div class="text-white text-3xl font-bold count-up">12</div>
+            <div class="text-indigo-300 text-xs">активных</div>
+          </div>
+          <div class="stat-chip card fade-up delay-1" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+            <div class="text-sky-200 text-xs font-semibold">Часов/месяц</div>
+            <div class="text-white text-3xl font-bold count-up">29</div>
+            <div class="text-sky-300 text-xs">из 40 планов</div>
+          </div>
+          <div class="stat-chip card fade-up delay-2" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <div class="text-emerald-200 text-xs font-semibold">Заработок</div>
+            <div class="text-white text-3xl font-bold count-up">$348</div>
+            <div class="text-emerald-300 text-xs">в этом месяце</div>
+          </div>
+          <div class="stat-chip card fade-up delay-3" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <div class="text-amber-200 text-xs font-semibold">Рейтинг</div>
+            <div class="text-white text-3xl font-bold count-up">4.9</div>
+            <div class="text-amber-300 text-xs">⭐ 48 отзывов</div>
+          </div>
+        </div>
+
+        <!-- Next lesson + student list -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+
+          <!-- Next lesson -->
+          <div class="lg:col-span-3 card p-6 fade-up">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold text-slate-800">Следующий урок</h2>
+              <div class="badge badge-blue">Через 1ч 45м</div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 rounded-xl mb-4" style="background:#faf5ff">
+              <div class="avatar w-14 h-14 text-lg" style="background:linear-gradient(135deg,#c084fc,#818cf8)">АА</div>
+              <div class="flex-1">
+                <div class="font-semibold text-slate-800">Азиз Абдуллаев</div>
+                <div class="text-sm text-slate-500 mt-0.5">📚 Тема: Past Perfect Continuous</div>
+                <div class="text-xs text-slate-400 mt-1">⏰ 15:00–16:00 · Zoom</div>
+              </div>
+              <div class="text-right">
+                <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#6366f1">
+                  Открыть 🎬
+                </button>
+                <div class="text-xs text-slate-400 mt-1">Уровень: B1</div>
+              </div>
+            </div>
+
+            <!-- Timer -->
+            <div class="flex gap-3 justify-center">
+              <div class="text-center">
+                <div class="bg-slate-100 rounded-xl px-4 py-3 timer-digit text-slate-800" id="t-hours">01</div>
+                <div class="text-xs text-slate-400 mt-1">часов</div>
+              </div>
+              <div class="timer-digit text-slate-400 pt-3">:</div>
+              <div class="text-center">
+                <div class="bg-slate-100 rounded-xl px-4 py-3 timer-digit text-slate-800" id="t-mins">45</div>
+                <div class="text-xs text-slate-400 mt-1">минут</div>
+              </div>
+              <div class="timer-digit text-slate-400 pt-3">:</div>
+              <div class="text-center">
+                <div class="bg-slate-100 rounded-xl px-4 py-3 timer-digit text-slate-800" id="t-secs">00</div>
+                <div class="text-xs text-slate-400 mt-1">секунд</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick stats panel -->
+          <div class="lg:col-span-2 card p-6 fade-up delay-1">
+            <h2 class="text-base font-bold text-slate-800 mb-4">Сегодня</h2>
+            <div class="flex flex-col gap-3">
+              <div class="flex items-center justify-between p-3 rounded-xl" style="background:#f8faff">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">📖</span>
+                  <div>
+                    <div class="text-sm font-semibold text-slate-700">Уроков</div>
+                    <div class="text-xs text-slate-400">запланировано</div>
+                  </div>
+                </div>
+                <div class="text-xl font-bold text-indigo-600">4</div>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl" style="background:#f0fdf4">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">✅</span>
+                  <div>
+                    <div class="text-sm font-semibold text-slate-700">Проведено</div>
+                    <div class="text-xs text-slate-400">завершено</div>
+                  </div>
+                </div>
+                <div class="text-xl font-bold text-green-600">2</div>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl" style="background:#fef9c3">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">⏳</span>
+                  <div>
+                    <div class="text-sm font-semibold text-slate-700">Ожидают</div>
+                    <div class="text-xs text-slate-400">подтверждения</div>
+                  </div>
+                </div>
+                <div class="text-xl font-bold text-amber-600">2</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active students list -->
+        <div class="fade-up delay-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-slate-800">Активные ученики</h2>
+            <input id="student-search" onkeyup="filterStudents()" type="text" placeholder="🔍 Поиск..." 
+              class="border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-400 w-48">
+          </div>
+          <div class="card overflow-hidden">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-100 bg-slate-50">
+                  <th class="text-left px-6 py-3 text-slate-500 font-semibold">Ученик</th>
+                  <th class="text-left px-6 py-3 text-slate-500 font-semibold">Предмет / Цель</th>
+                  <th class="text-left px-6 py-3 text-slate-500 font-semibold">Уровень</th>
+                  <th class="text-left px-6 py-3 text-slate-500 font-semibold">Уроков</th>
+                  <th class="text-left px-6 py-3 text-slate-500 font-semibold">След. урок</th>
+                  <th class="text-left px-6 py-3 text-slate-500 font-semibold"></th>
+                </tr>
+              </thead>
+              <tbody id="students-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /t-home -->
+
+      <!-- SCHEDULE SECTION -->
+      <div id="t-schedule" class="hidden">
+        <h2 class="text-xl font-bold text-slate-800 mb-6">Моё расписание</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 card p-6">
+            <div id="teacher-calendar"></div>
+          </div>
+          <div class="card p-6">
+            <h3 class="font-bold text-slate-700 mb-4">Слоты доступности</h3>
+            <div class="flex flex-col gap-2" id="availability-slots"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MATERIALS SECTION -->
+      <div id="t-materials" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-slate-800">Мои материалы</h2>
+          <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#6366f1">+ Загрузить</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="materials-list"></div>
+      </div>
+
+      <!-- STUDENTS DETAIL -->
+      <div id="t-students" class="hidden">
+        <h2 class="text-xl font-bold text-slate-800 mb-6">Все ученики</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="students-cards"></div>
+      </div>
+
+      <!-- SUBSCRIPTION -->
+      <div id="t-subscription" class="hidden">
+        <h2 class="text-xl font-bold text-slate-800 mb-6">Управление подпиской</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-700">Текущий план</h3>
+              <span class="badge badge-green">Активна</span>
+            </div>
+            <div class="text-3xl font-bold text-slate-800 mb-1">$2 <span class="text-base font-normal text-slate-400">/ месяц</span></div>
+            <p class="text-sm text-slate-500 mb-4">Стандартный план репетитора</p>
+            <div class="flex flex-col gap-2 text-sm text-slate-600">
+              <div class="flex items-center gap-2"><span class="text-green-500">✓</span> Неограниченное количество учеников</div>
+              <div class="flex items-center gap-2"><span class="text-green-500">✓</span> Видимость в поиске</div>
+              <div class="flex items-center gap-2"><span class="text-green-500">✓</span> Аналитика и статистика</div>
+              <div class="flex items-center gap-2"><span class="text-green-500">✓</span> Приоритетная поддержка</div>
+            </div>
+            <div class="mt-4 p-3 rounded-xl text-sm" style="background:#f0fdf4">
+              <div class="text-green-700 font-semibold">Следующее списание: 1 июня 2026</div>
+            </div>
+          </div>
+          <div class="card p-6" style="background: linear-gradient(135deg, #1e1b4b, #312e81);">
+            <div class="text-white font-bold text-lg mb-2">Про-план</div>
+            <div class="text-indigo-200 text-sm mb-4">Скоро: расширенная аналитика, приоритет в поиске, видеохостинг</div>
+            <button class="w-full py-3 rounded-xl font-bold text-sm" style="background:rgba(255,255,255,0.15); color:#fff; border: 1px solid rgba(255,255,255,0.2)">
+              Уведомить меня 🔔
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /main teacher -->
+</div><!-- /teacher-view -->
+
+<!-- ── Student Profile Modal ── -->
+<div id="student-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="card w-full max-w-lg p-6 relative">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ── Role Toggle Button (for demo/pitch) ── -->
+<button class="role-toggle" onclick="toggleRole()">
+  <span id="toggle-icon">👨‍🏫</span>
+  <span id="toggle-text">Режим учителя</span>
+</button>
+
+
+<script>
+// ══════════════════════════════════════════════════════════
+// MOCK DATA
+// ══════════════════════════════════════════════════════════
+
+const API_BASE = '/api'; // Change to your server URL
+
+const mockStudentData = {
+  user: { id: 'u1', name: 'Алибек Батыров', email: 'alibek@example.com', role: 'student' },
+  balance: 8,
+  nextLesson: {
+    id: 'l1', teacher: 'Малика Азимова', subject: 'Английский (IELTS)', date: 'Сегодня', time: '15:00–16:00',
+    platform: 'Zoom', url: 'https://zoom.us/j/123', avatar: 'МА'
+  },
+  teachers: [
+    { id: 't1', name: 'Малика Азимова', subject: 'Английский', rating: 4.9, price: 12, avatar: 'МА', color: '#0ea5e9', lessons: 24, status: 'active' },
+    { id: 't2', name: 'Камол Юсупов', subject: 'Математика', rating: 4.8, price: 10, avatar: 'КЮ', color: '#10b981', lessons: 8, status: 'active' },
+    { id: 't3', name: 'Нилуфар Расулова', subject: 'Физика', rating: 4.7, price: 11, avatar: 'НР', color: '#f59e0b', lessons: 5, status: 'pending' },
+  ],
+  upcoming: [
+    { id: 'u1', teacher: 'Малика Азимова', subject: 'Английский', date: 'Сегодня', time: '15:00', avatar: 'МА', color: '#0ea5e9' },
+    { id: 'u2', teacher: 'Камол Юсупов', subject: 'Математика', date: 'Завтра', time: '14:00', avatar: 'КЮ', color: '#10b981' },
+    { id: 'u3', teacher: 'Малика Азимова', subject: 'Английский', date: 'Пт 23 мая', time: '15:00', avatar: 'МА', color: '#0ea5e9' },
+    { id: 'u4', teacher: 'Нилуфар Расулова', subject: 'Физика', date: 'Сб 24 мая', time: '11:00', avatar: 'НР', color: '#f59e0b' },
+  ],
+  history: [
+    { teacher: 'Малика Азимова', subject: 'Английский', date: '20 мая', duration: '60 мин', status: 'completed' },
+    { teacher: 'Камол Юсупов', subject: 'Математика', date: '18 мая', duration: '60 мин', status: 'completed' },
+    { teacher: 'Малика Азимова', subject: 'Английский', date: '16 мая', duration: '60 мин', status: 'completed' },
+    { teacher: 'Нилуфар Расулова', subject: 'Физика', date: '14 мая', duration: '45 мин', status: 'cancelled' },
+    { teacher: 'Малика Азимова', subject: 'Английский', date: '13 мая', duration: '60 мин', status: 'completed' },
+  ]
+};
+
+const mockTeacherData = {
+  user: { id: 't1', name: 'Малика Азимова', email: 'malika@example.com', role: 'tutor' },
+  subscription: { status: true, plan: 'Standard', price: 2, nextBilling: '2026-06-01' },
+  stats: { students: 12, hoursMonth: 29, earnings: 348, rating: 4.9, reviews: 48 },
+  students: [
+    { id: 's1', name: 'Азиз Абдуллаев', goal: 'IELTS 7.0', level: 'B1', lessons: 12, nextLesson: 'Сегодня 15:00', avatar: 'АА', color: '#6366f1', interests: ['Путешествия', 'Технологии'], style: 'Визуальный' },
+    { id: 's2', name: 'Зарина Хасанова', goal: 'Разговорный', level: 'A2', lessons: 6, nextLesson: 'Завтра 10:00', avatar: 'ЗХ', color: '#ec4899', interests: ['Музыка', 'Кино'], style: 'Аудиальный' },
+    { id: 's3', name: 'Бобур Каримов', goal: 'Business English', level: 'B2', lessons: 20, nextLesson: 'Пт 16:00', avatar: 'БК', color: '#10b981', interests: ['Бизнес', 'Финансы'], style: 'Кинестетический' },
+    { id: 's4', name: 'Дилноза Юсупова', goal: 'SAT подготовка', level: 'B1', lessons: 4, nextLesson: 'Сб 12:00', avatar: 'ДЮ', color: '#f59e0b', interests: ['Наука', 'Математика'], style: 'Логический' },
+    { id: 's5', name: 'Санжар Рашидов', goal: 'Общий English', level: 'A1', lessons: 2, nextLesson: 'Вс 11:00', avatar: 'СР', color: '#0ea5e9', interests: ['Игры', 'Аниме'], style: 'Визуальный' },
+  ],
+  materials: [
+    { name: 'IELTS Writing Templates.pdf', size: '2.4 MB', type: 'pdf', date: '15 мая' },
+    { name: 'Grammar Exercises B1.docx', size: '856 KB', type: 'doc', date: '12 мая' },
+    { name: 'Vocabulary List Advanced.xlsx', size: '124 KB', type: 'xls', date: '10 мая' },
+    { name: 'Pronunciation Guide.mp3', size: '18.2 MB', type: 'audio', date: '8 мая' },
+    { name: 'Business English Slides.pptx', size: '5.1 MB', type: 'ppt', date: '5 мая' },
+    { name: 'Reading Comprehension Set.pdf', size: '3.7 MB', type: 'pdf', date: '1 мая' },
+  ]
+};
+
+// ══════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ══════════════════════════════════════════════════════════
+
+function renderStudentDashboard() {
+  renderMyTeachers();
+  renderUpcoming();
+  renderHistoryTable();
+  renderCalendar('mini-calendar', 'student');
+  startStudentCountdown();
+}
+
+function renderMyTeachers() {
+  const container = document.getElementById('my-teachers-list');
+  container.innerHTML = mockStudentData.teachers.map(t => `
+    <div class="card p-5 cursor-pointer hover:scale-[1.02] transition-transform" style="border-left: 4px solid ${t.color}">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="avatar w-11 h-11 text-sm" style="background: linear-gradient(135deg, ${t.color}cc, ${t.color})">${t.avatar}</div>
+        <div class="flex-1">
+          <div class="font-semibold text-slate-800 text-sm">${t.name}</div>
+          <div class="text-xs text-slate-400">${t.subject}</div>
+        </div>
+        <span class="badge ${t.status === 'active' ? 'badge-green' : 'badge-amber'}">${t.status === 'active' ? '● Активный' : '⏳ Ожидание'}</span>
+      </div>
+      <div class="flex items-center justify-between text-xs text-slate-500">
+        <span>⭐ ${t.rating}</span>
+        <span>📚 ${t.lessons} уроков</span>
+        <span>💵 $${t.price}/ч</span>
+      </div>
+      <button onclick="bookLesson('${t.id}')" class="mt-3 w-full py-2 rounded-xl text-sm font-semibold transition hover:opacity-90"
+        style="background: ${t.color}20; color: ${t.color}; border: 1px solid ${t.color}40">
+        Записаться на урок
+      </button>
+    </div>
+  `).join('');
+}
+
+function renderUpcoming() {
+  const container = document.getElementById('s-upcoming-list');
+  container.innerHTML = mockStudentData.upcoming.map(l => `
+    <div class="card p-4 flex items-center gap-3">
+      <div class="avatar w-10 h-10 text-xs flex-shrink-0" style="background: linear-gradient(135deg, ${l.color}cc, ${l.color})">${l.avatar}</div>
+      <div class="flex-1">
+        <div class="font-semibold text-slate-700 text-sm">${l.teacher}</div>
+        <div class="text-xs text-slate-400">${l.subject}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm font-semibold text-slate-700">${l.time}</div>
+        <div class="text-xs text-slate-400">${l.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderHistoryTable() {
+  const tbody = document.getElementById('history-table');
+  tbody.innerHTML = mockStudentData.history.map(h => `
+    <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+      <td class="px-6 py-3 font-medium text-slate-700">${h.teacher}</td>
+      <td class="px-6 py-3 text-slate-500">${h.subject}</td>
+      <td class="px-6 py-3 text-slate-500">${h.date}</td>
+      <td class="px-6 py-3 text-slate-500">${h.duration}</td>
+      <td class="px-6 py-3">
+        <span class="badge ${h.status === 'completed' ? 'badge-green' : 'badge-red'}">
+          ${h.status === 'completed' ? '✓ Проведён' : '✕ Отменён'}
+        </span>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderTeacherDashboard() {
+  renderStudentsTable();
+  renderStudentsCards();
+  renderMaterials();
+  renderCalendar('teacher-calendar', 'teacher');
+  renderAvailabilitySlots();
+  startTeacherTimer();
+}
+
+function renderStudentsTable() {
+  const tbody = document.getElementById('students-table');
+  tbody.innerHTML = mockTeacherData.students.map(s => `
+    <tr class="border-b border-slate-50 hover:bg-slate-50 transition" data-name="${s.name.toLowerCase()}">
+      <td class="px-6 py-3">
+        <div class="flex items-center gap-3">
+          <div class="avatar w-9 h-9 text-xs" style="background: linear-gradient(135deg, ${s.color}cc, ${s.color})">${s.avatar}</div>
+          <div>
+            <div class="font-semibold text-slate-700">${s.name}</div>
+            <div class="text-xs text-slate-400">${s.interests.join(', ')}</div>
+          </div>
+        </div>
+      </td>
+      <td class="px-6 py-3 text-slate-600">${s.goal}</td>
+      <td class="px-6 py-3"><span class="badge badge-blue">${s.level}</span></td>
+      <td class="px-6 py-3 text-slate-600 font-semibold">${s.lessons}</td>
+      <td class="px-6 py-3 text-slate-500 text-sm">${s.nextLesson}</td>
+      <td class="px-6 py-3">
+        <button onclick="openStudentModal('${s.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition">
+          Профиль →
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderStudentsCards() {
+  const container = document.getElementById('students-cards');
+  container.innerHTML = mockTeacherData.students.map(s => `
+    <div class="card p-5 cursor-pointer" onclick="openStudentModal('${s.id}')">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="avatar w-12 h-12" style="background: linear-gradient(135deg, ${s.color}cc, ${s.color})">${s.avatar}</div>
+        <div>
+          <div class="font-bold text-slate-800">${s.name}</div>
+          <div class="text-sm text-slate-400">Уровень: ${s.level} · ${s.lessons} уроков</div>
+        </div>
+        <span class="ml-auto badge badge-blue">${s.style}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="text-xs p-2 rounded-lg bg-slate-50">
+          <div class="text-slate-400">Цель</div>
+          <div class="font-semibold text-slate-700">${s.goal}</div>
+        </div>
+        <div class="text-xs p-2 rounded-lg bg-slate-50">
+          <div class="text-slate-400">След. урок</div>
+          <div class="font-semibold text-slate-700">${s.nextLesson}</div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-1">
+        ${s.interests.map(i => `<span class="badge badge-blue text-xs">${i}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMaterials() {
+  const icons = { pdf: '📄', doc: '📝', xls: '📊', audio: '🎵', ppt: '📊' };
+  const colors = { pdf: '#fee2e2', doc: '#dbeafe', xls: '#dcfce7', audio: '#fde68a', ppt: '#ede9fe' };
+  const container = document.getElementById('materials-list');
+  container.innerHTML = mockTeacherData.materials.map(m => `
+    <div class="card p-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl" style="background:${colors[m.type] || '#f1f5f9'}">${icons[m.type] || '📎'}</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-slate-700 text-sm truncate">${m.name}</div>
+        <div class="text-xs text-slate-400">${m.size} · ${m.date}</div>
+      </div>
+      <button class="text-slate-400 hover:text-indigo-600 transition text-lg">⬇</button>
+    </div>
+  `).join('');
+}
+
+function renderAvailabilitySlots() {
+  const slots = ['Понедельник 9:00–11:00', 'Вторник 14:00–18:00', 'Среда 9:00–11:00', 'Пятница 15:00–19:00', 'Суббота 10:00–14:00'];
+  const container = document.getElementById('availability-slots');
+  container.innerHTML = slots.map(s => `
+    <div class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition cursor-pointer border border-slate-100">
+      <span class="text-sm text-slate-700">${s}</span>
+      <span class="text-green-500 text-xs font-semibold">Свободно</span>
+    </div>
+  `).join('');
+}
+
+function renderCalendar(containerId, role) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const lessonDays = role === 'student' ? [3, 5, 10, 12, 17, 19, 23, 26] : [2, 5, 7, 9, 12, 14, 16, 19, 21, 23, 26, 28];
+  const today = 23;
+  let html = `
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-slate-700">Май 2026</h3>
+      <div class="flex gap-2">
+        <button class="p-1 rounded hover:bg-slate-100">←</button>
+        <button class="p-1 rounded hover:bg-slate-100">→</button>
+      </div>
+    </div>
+    <div class="grid grid-cols-7 gap-1 mb-2">
+      ${days.map(d => `<div class="text-center text-xs font-semibold text-slate-400 pb-1">${d}</div>`).join('')}
+    </div>
+    <div class="grid grid-cols-7 gap-1">
+  `;
+  // May 2026 starts on Friday (index 4 of Mon-Sun)
+  for (let i = 0; i < 4; i++) html += `<div></div>`;
+  for (let d = 1; d <= 31; d++) {
+    const isToday = d === today;
+    const hasLesson = lessonDays.includes(d);
+    html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasLesson ? 'has-lesson' : ''}">${d}</div>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+
+function showSection(id, el) {
+  document.querySelectorAll('#student-view main > div').forEach(d => d.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('#student-view .nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function showTeacherSection(id, el) {
+  document.querySelectorAll('#teacher-view main > div').forEach(d => d.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('#teacher-view .nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════
+// ROLE TOGGLE (demo)
+// ══════════════════════════════════════════════════════════
+
+let currentRole = 'student';
+
+function toggleRole() {
+  if (currentRole === 'student') {
+    document.getElementById('student-view').classList.add('hidden');
+    document.getElementById('teacher-view').classList.remove('hidden');
+    document.getElementById('toggle-icon').textContent = '👨‍🎓';
+    document.getElementById('toggle-text').textContent = 'Режим ученика';
+    currentRole = 'teacher';
+  } else {
+    document.getElementById('teacher-view').classList.add('hidden');
+    document.getElementById('student-view').classList.remove('hidden');
+    document.getElementById('toggle-icon').textContent = '👨‍🏫';
+    document.getElementById('toggle-text').textContent = 'Режим учителя';
+    currentRole = 'student';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// MODALS & ACTIONS
+// ══════════════════════════════════════════════════════════
+
+function openStudentModal(id) {
+  const s = mockTeacherData.students.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="flex items-center gap-4 mb-6">
+      <div class="avatar w-16 h-16 text-xl" style="background: linear-gradient(135deg, ${s.color}cc, ${s.color})">${s.avatar}</div>
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">${s.name}</h2>
+        <div class="flex gap-2 mt-1">
+          <span class="badge badge-blue">${s.level}</span>
+          <span class="badge badge-amber">${s.style}</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="p-3 rounded-xl bg-slate-50">
+        <div class="text-xs text-slate-400 mb-1">Цель обучения</div>
+        <div class="font-semibold text-slate-700">${s.goal}</div>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-50">
+        <div class="text-xs text-slate-400 mb-1">Проведено уроков</div>
+        <div class="font-semibold text-slate-700">${s.lessons}</div>
+      </div>
+    </div>
+    <div class="mb-4">
+      <div class="text-sm font-semibold text-slate-600 mb-2">Интересы</div>
+      <div class="flex flex-wrap gap-2">
+        ${s.interests.map(i => `<span class="badge badge-blue">${i}</span>`).join('')}
+      </div>
+    </div>
+    <div class="mb-4">
+      <div class="text-sm font-semibold text-slate-600 mb-2">Стиль обучения</div>
+      <div class="p-3 rounded-xl" style="background: #ede9fe">
+        <span class="text-indigo-700 font-medium">🧠 ${s.style}</span>
+        <p class="text-xs text-indigo-500 mt-1">Используйте визуальные материалы и схемы для лучшего усвоения</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button class="flex-1 py-2.5 rounded-xl text-white font-semibold text-sm" style="background:#6366f1">💬 Написать</button>
+      <button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl font-semibold text-sm border border-slate-200 text-slate-600 hover:bg-slate-50">Закрыть</button>
+    </div>
+  `;
+  document.getElementById('student-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('student-modal').classList.add('hidden');
+}
+
+function filterStudents() {
+  const query = document.getElementById('student-search').value.toLowerCase();
+  document.querySelectorAll('#students-table tr').forEach(row => {
+    row.style.display = row.dataset.name?.includes(query) ? '' : 'none';
+  });
+}
+
+function joinClass() {
+  alert('Открываем Zoom-конференцию...\n\nВ реальном приложении откроется ссылка на урок.');
+}
+
+function bookLesson(id) {
+  alert(`Бронирование урока у учителя ${id}...\n\nОткроется форма выбора слота.`);
+}
+
+function openQuiz() {
+  // Redirect to quiz page
+  window.location.href = 'index.html#quiz';
+}
+
+function logout() {
+  localStorage.removeItem('ustoz_token');
+  window.location.href = 'index.html';
+}
+
+// ══════════════════════════════════════════════════════════
+// TIMERS
+// ══════════════════════════════════════════════════════════
+
+function startStudentCountdown() {
+  let total = 105 * 60; // 1h 45m
+  const el = document.getElementById('countdown');
+  if (!el) return;
+  setInterval(() => {
+    if (total <= 0) { el.textContent = 'Начался!'; return; }
+    const m = String(Math.floor(total / 60)).padStart(2, '0');
+    const s = String(total % 60).padStart(2, '0');
+    el.textContent = `${m}:${s}`;
+    total--;
+  }, 1000);
+}
+
+function startTeacherTimer() {
+  let total = 105 * 60;
+  setInterval(() => {
+    if (total <= 0) return;
+    document.getElementById('t-hours').textContent = String(Math.floor(total / 3600)).padStart(2, '0');
+    document.getElementById('t-mins').textContent = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+    document.getElementById('t-secs').textContent = String(total % 60).padStart(2, '0');
+    total--;
+  }, 1000);
+}
+
+// ══════════════════════════════════════════════════════════
+// API INTEGRATION HELPERS
+// ══════════════════════════════════════════════════════════
+
+const token = () => localStorage.getItem('ustoz_token') || '';
+
+async function apiFetch(path, options = {}) {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json', ...options.headers },
+      ...options
+    });
+    return await res.json();
+  } catch (e) {
+    console.error('API error:', e);
+    return null;
+  }
+}
+
+// Load real data from API (called after auth)
+async function loadStudentDashboard() {
+  const data = await apiFetch('/student/dashboard');
+  if (data?.success) {
+    console.log('Student dashboard data:', data);
+    // Merge with mock data or replace
+  }
+}
+
+async function loadTeacherDashboard() {
+  const data = await apiFetch('/teacher/dashboard');
+  if (data?.success) {
+    console.log('Teacher dashboard data:', data);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Check role from JWT token
+  const storedToken = token();
+  if (storedToken) {
+    try {
+      const payload = JSON.parse(atob(storedToken.split('.')[1]));
+      if (payload.role === 'tutor' || payload.role === 'teacher') {
+        document.getElementById('student-view').classList.add('hidden');
+        document.getElementById('teacher-view').classList.remove('hidden');
+        document.getElementById('toggle-icon').textContent = '👨‍🎓';
+        document.getElementById('toggle-text').textContent = 'Режим ученика';
+        currentRole = 'teacher';
+        loadTeacherDashboard();
+      } else {
+        loadStudentDashboard();
+      }
+    } catch(e) { /* token parsing failed, use default */ }
+  }
+
+  renderStudentDashboard();
+  renderTeacherDashboard();
+});
+</script>
+</body>
+</html>
